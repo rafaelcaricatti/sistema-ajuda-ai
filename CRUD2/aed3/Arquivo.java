@@ -13,15 +13,15 @@ public class Arquivo<T extends Registro> {
     HashExtensivel<ParIDEndereco> indiceDireto;
 
     public Arquivo(String na, Constructor<T> c) throws Exception {
-        File d = new File(".\\dados");
+        File d = new File("./dados");
         if(!d.exists())
             d.mkdir();
 
-        d = new File(".\\dados\\"+na);
+        d = new File("./dados/"+na);
         if(!d.exists())
             d.mkdir();
 
-        this.nomeArquivo = ".\\dados\\"+na+"\\"+na+".db";
+        this.nomeArquivo = "./dados/"+na+"/"+na+".db";
         this.construtor = c;
         arquivo = new RandomAccessFile(this.nomeArquivo, "rw");
         if(arquivo.length()<TAM_CABECALHO) {
@@ -33,8 +33,8 @@ public class Arquivo<T extends Registro> {
         indiceDireto = new HashExtensivel<>(
             ParIDEndereco.class.getConstructor(), 
             4, 
-            ".\\dados\\"+na+"\\"+na+".d.db", // diretório 
-            ".\\dados\\"+na+"\\"+na+".c.db"  // cestos
+            "./dados/"+na+"/"+na+".d.db", // diretório 
+            "./dados/"+na+"/"+na+".c.db"  // cestos
         );
     }
 
@@ -151,7 +151,7 @@ public class Arquivo<T extends Registro> {
                         addDeleted(tam, pie.getEndereco());                        
 
                         // grava o novo registro
-                        long novoEndereco = getDeleted(b.length);   // tenta reusar algum espaço de registro excluído
+                        long novoEndereco = getDeleted(tam2);   // tenta reusar algum espaço de registro excluído
                         if(novoEndereco == -1) {   // nenhum espaço disponível; escreve o registro no fim do arquivo  
                             arquivo.seek(arquivo.length());
                             novoEndereco = arquivo.getFilePointer();
@@ -206,7 +206,7 @@ public class Arquivo<T extends Registro> {
                     arquivo.seek(endereco+3);
                     arquivo.writeLong(enderecoEspaco);
                     arquivo.seek(enderecoEspaco+3);
-                    arquivo.writeLong(+1);
+                    arquivo.writeLong(-1);
                     break;
                 }
                 anterior = endereco;
@@ -227,7 +227,7 @@ public class Arquivo<T extends Registro> {
             arquivo.seek(endereco+1);
             tamanho = arquivo.readShort();
             proximo = arquivo.readLong();
-            if(tamanho > tamanhoNecessario) {  
+            if(tamanho >= tamanhoNecessario) {  
                 if(anterior == 4)  // o elemento é o primeiro da lista 
                     arquivo.seek(anterior);
                 else

@@ -1,45 +1,89 @@
 import aed3.Arquivo;
+import aed3.ParIdId;
 
+import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
 
-public class ArquivoPergunta {
-    private final Arquivo<Pergunta> arquivo;
+/**
+ * CRUD especializado de Pergunta.
+ *
+ * O relacionamento 1:N usuário -> perguntas é mantido pela implementação
+ * oficial de Árvore B+ fornecida pelo professor, usando o par
+ * [idUsuario, idPergunta].
+ */
+public class ArquivoPergunta extends Arquivo<Pergunta> {
+
+    private final aed3.ArvoreBMais<ParIdId> relUsuarioPergunta;
 
     public ArquivoPergunta() throws Exception {
-        this.arquivo = new Arquivo<>("perguntas", Pergunta.class.getConstructor());
-    }
+        super("perguntas", Pergunta.class.getConstructor());
 
-    public int create(Pergunta pergunta) throws Exception {
-        return arquivo.create(pergunta);
-    }
-
-    public Pergunta read(int id) throws Exception {
-        return arquivo.read(id);
-    }
-
-    public boolean update(Pergunta pergunta) throws Exception {
-        return arquivo.update(pergunta);
-    }
-
-    public boolean delete(int id) throws Exception {
-        return arquivo.delete(id);
-    }
-
-    public List<Pergunta> listarTodas() throws Exception {
-        List<Pergunta> todos = new ArrayList<>();
-        int ultimoId = 0;
-        while (true) {
-            Pergunta p = arquivo.read(++ultimoId);
-            if (p == null) {
-                break;
-            }
-            todos.add(p);
+        // A árvore do professor recebe diretamente o nome do arquivo.
+        File pasta = new File("./dados/perguntas");
+        if (!pasta.exists()) {
+            pasta.mkdirs();
         }
-        return todos;
+
+        relUsuarioPergunta = new aed3.ArvoreBMais<>(
+                ParIdId.class.getConstructor(),
+                5,
+                "./dados/perguntas/relUsuarioPergunta.db"
+        );
     }
 
-    public void close() throws Exception {
-        arquivo.close();
+    @Override
+    public int create(Pergunta pergunta) throws Exception {
+        int id = super.create(pergunta);
+        boolean criouRelacao = relUsuarioPergunta.create(new ParIdId(pergunta.idUsuario, id));
+        if (!criouRelacao) {
+            throw new Exception("Não foi possível criar o relacionamento usuário-pergunta.");
+        }
+        return id;
+    }
+
+    @Override
+    public boolean update(Pergunta perguntaAtualizada) throws Exception {
+        Pergunta perguntaAntiga = super.read(perguntaAtualizada.idPergunta);
+        if (perguntaAntiga == null) {
+            return false;
+        }
+
+        // IDs não são alterados pela interface, mas mantemos o relacionamento
+        // consistente caso o objeto seja alterado indevidamente em outro ponto.
+        if (perguntaAntiga.idUsuario != perguntaAtualizada.idUsuario) {
+            relUsuarioPergunta.delete(
+                    new ParIdId(perguntaAntiga.idUsuario, perguntaAtualizada.idPergunta)
+            );
+            relUsuarioPergunta.create(
+                    new ParIdId(perguntaAtualizada.idUsuario, perguntaAtualizada.idPergunta)
+            );
+        }
+
+        return super.update(perguntaAtualizada);
+    }
+
+    @Override
+    public boolean delete(int id) throws Exception {
+        Pergunta pergunta = super.read(id);
+        if (pergunta == null) {
+            return false;
+        }
+
+        relUsuarioPergunta.delete(new ParIdId(pergunta.idUsuario, id));
+        return super.delete(id);
+    }
+
+    public Pergunta[] readAllByUsuario(int idUsuario) throws Exception {
+        ArrayList<Pergunta> perguntas = new ArrayList<>();
+        ArrayList<ParIdId> relacoes = relUsuarioPergunta.read(new ParIdId(idUsuario, -1));
+
+        for (ParIdId relacao : relacoes) {
+            Pergunta pergunta = super.read(relacao.getId2());
+            if (pergunta != null) {
+                perguntas.add(pergunta);
+            }
+        }
+
+        return perguntas.toArray(new Pergunta[0]);
     }
 }
