@@ -10,8 +10,8 @@ public class ArquivoUsuario extends Arquivo<Usuario> {
         indiceEmail = new HashExtensivel<>(
                 ParEmailIdUsuario.class.getConstructor(),
                 4,
-                ".\\dados\\usuarios\\usuarios.email.d.db",
-                ".\\dados\\usuarios\\usuarios.email.c.db"
+                "./dados/usuarios/usuarios.email.d.db",
+                "./dados/usuarios/usuarios.email.c.db"
         );
     }
 

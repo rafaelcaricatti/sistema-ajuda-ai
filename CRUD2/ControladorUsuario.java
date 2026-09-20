@@ -19,8 +19,6 @@ public class ControladorUsuario {
         return usuario;
     }
 
-    // valida email e senha de uma só vez; retorno nulo indica falha (sem
-    // detalhar se o problema foi o email ou a senha, por segurança)
     public Usuario login(String email, String senha) throws Exception {
         Usuario usuario = arquivoUsuarios.buscarPorEmail(email);
         if (usuario == null)
