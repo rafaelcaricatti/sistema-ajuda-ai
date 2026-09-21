@@ -1,26 +1,9 @@
-/*********
- * ARVORE B+ 
- * 
- * Os nomes dos métodos foram mantidos em inglês
- * apenas para manter a coerência com o resto da
- * disciplina:
- * - boolean create(RegistroArvoreBMais objeto)   
- * - int[] read(RegistroArvoreBMais objeto)
- * - boolean delete(RegistroArvoreBMais objeto)
- * 
- * Implementado pelo Prof. Marcos Kutova
- * v2.1 - 2026
- */
+
 package aed3;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-
-// Esta versão da árvore funciona apenas como um conjunto de par de chaves.
-// A primeira chave pode repetir na árvore, mas não o par de chaves, 
-// isto é, quando a primeira chave de dois elementos for igual, a segunda chave,
-// deve ser necessariamente diferente.
 
 public class ArvoreBMais<T extends InterfaceArvoreBMais<T>> {
 
@@ -141,7 +124,6 @@ public class ArvoreBMais<T extends InterfaceArvoreBMais<T>> {
         }
     }
 
-    // ------------------------------------------------------------------------------
 
     public ArvoreBMais(Constructor<T> c, int o, String na) throws Exception {
 

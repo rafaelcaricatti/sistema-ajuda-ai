@@ -1,16 +1,8 @@
 import aed3.Arquivo;
 import aed3.ParIdId;
-
 import java.io.File;
 import java.util.ArrayList;
 
-/**
- * CRUD especializado de Pergunta.
- *
- * O relacionamento 1:N usuário -> perguntas é mantido pela implementação
- * oficial de Árvore B+ fornecida pelo professor, usando o par
- * [idUsuario, idPergunta].
- */
 public class ArquivoPergunta extends Arquivo<Pergunta> {
 
     private final aed3.ArvoreBMais<ParIdId> relUsuarioPergunta;
@@ -18,7 +10,6 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
     public ArquivoPergunta() throws Exception {
         super("perguntas", Pergunta.class.getConstructor());
 
-        // A árvore do professor recebe diretamente o nome do arquivo.
         File pasta = new File("./dados/perguntas");
         if (!pasta.exists()) {
             pasta.mkdirs();

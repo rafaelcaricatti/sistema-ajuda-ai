@@ -4,12 +4,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
 
-/**
- * Interface textual e controle de navegação do AJUDA AÍ 1.0.
- *
- * Parte do Integrante 4: menus em console, integração entre usuários/perguntas
- * e associação entre numeração sequencial da tela e IDs internos.
- */
+
 public class InterfaceSistema {
 
     private final Scanner scanner;
@@ -89,7 +84,6 @@ public class InterfaceSistema {
     private void cadastrarUsuario() throws Exception {
         cabecalho("Novo usuário");
 
-        // O enunciado pede que o email seja verificado antes dos demais dados.
         String email = lerTextoObrigatorio("Email: ");
         if (controladorUsuario.getArquivoUsuarios().existeEmail(email)) {
             mensagem("Já existe um usuário cadastrado com este email.");
@@ -413,10 +407,6 @@ public class InterfaceSistema {
         }
     }
 
-    /**
-     * Imprime as perguntas com números sequenciais (1, 2, 3...).
-     * Os IDs internos do usuário e da pergunta nunca são exibidos.
-     */
     private void imprimirPerguntas(List<Pergunta> perguntas) {
         if (perguntas.isEmpty()) {
             System.out.println("Nenhuma pergunta cadastrada.");
