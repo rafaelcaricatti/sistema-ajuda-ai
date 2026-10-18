@@ -135,7 +135,7 @@ public class InterfaceSistema {
                     menuMinhaArea(usuario);
                     break;
                 case "B":
-                    mensagem("Busca de perguntas será implementada em uma etapa posterior do projeto.");
+                    new MenuBuscaPerguntas(scanner, gerenciadorPerguntas, controladorUsuario.getArquivoUsuarios()).exibir(usuario);
                     break;
                 case "S":
                     logado = false;
