@@ -6,7 +6,10 @@ import java.util.Scanner;
 
 // Tela de UMA resposta. Fica em classe própria para não gerar conflito de merge
 // com quem mexe no InterfaceSistema. Quem lista as respostas só precisa chamar:
-// new MenuResposta(scanner, gerenciadorRespostas, nomeDoAutor).exibir(usuarioLogado, resposta, "Buscar perguntas > ... > Pergunta");
+// new MenuResposta(scanner, gerenciadorRespostas).exibir(usuarioLogado, pergunta, nomeAutorPergunta,
+//                                                        resposta, nomeAutorResposta, caminho, moderacao);
+// Com moderacao=true (Minha área > Minhas perguntas), o autor da pergunta pode arquivar
+// respostas de outros usuários em vez de avaliá-las.
 
 public class MenuResposta {
 
@@ -20,7 +23,8 @@ public class MenuResposta {
         this.gerenciador = gerenciador;
     }
 
-    public void exibir(Usuario logado, Resposta resposta, String nomeAutor, String caminho) throws Exception {
+    public void exibir(Usuario logado, Pergunta pergunta, String nomeAutorPergunta,
+                       Resposta resposta, String nomeAutor, String caminho, boolean moderacao) throws Exception {
         boolean voltar = false;
 
         while (!voltar) {
@@ -32,10 +36,14 @@ public class MenuResposta {
             }
 
             boolean propria = resposta.idUsuario == logado.idUsuario;
+            boolean podeModerar = moderacao && pergunta.idUsuario == logado.idUsuario;
 
             System.out.println("\nAJUDA AÍ 1.0");
             System.out.println("------------");
             System.out.println("> " + caminho + " > Resposta\n");
+            System.out.println(pergunta.pergunta);
+            System.out.println("Criada por " + (pergunta.idUsuario == logado.idUsuario ? "você" : nomeAutorPergunta)
+                    + " em " + formatador.format(Instant.ofEpochMilli(pergunta.criacao)) + "\n");
             System.out.println("RESPOSTA");
             System.out.println("--------\n");
             System.out.println(resposta.resposta);
@@ -43,8 +51,8 @@ public class MenuResposta {
                     + " em " + formatador.format(Instant.ofEpochMilli(resposta.criacao)));
             System.out.println("Nota: " + resposta.nota + "  (" + resposta.avaliacoes + " avaliações)\n");
 
-            if (propria) {
-                // autor da resposta: sem botões de voto, só arquivar
+            if (propria || podeModerar) {
+                // autor da resposta ou autor da pergunta moderando: sem botões de voto, só arquivar
                 System.out.println("(A) Arquivar resposta");
             } else {
                 System.out.println("(A) Concordar com a resposta");
@@ -56,16 +64,19 @@ public class MenuResposta {
 
             if (op.equals("R")) {
                 voltar = true;
-            } else if (propria && op.equals("A")) {
+            } else if ((propria || podeModerar) && op.equals("A")) {
                 System.out.print("Confirmar arquivamento? (S/N): ");
                 if (scanner.nextLine().trim().equalsIgnoreCase("S")) {
-                    if (gerenciador.arquivarResposta(logado.idUsuario, resposta.idResposta)) {
+                    boolean ok = propria
+                            ? gerenciador.arquivarResposta(logado.idUsuario, resposta.idResposta)
+                            : gerenciador.arquivarRespostaDaPergunta(logado.idUsuario, pergunta, resposta.idResposta);
+                    if (ok) {
                         System.out.println("\nResposta arquivada com sucesso.");
                         return;
                     }
                     System.out.println("\nNão foi possível arquivar a resposta.");
                 }
-            } else if (!propria && (op.equals("A") || op.equals("B"))) {
+            } else if (!propria && !podeModerar && (op.equals("A") || op.equals("B"))) {
                 GerenciadorRespostas.ResultadoVoto r =
                         gerenciador.votar(logado.idUsuario, resposta.idResposta, op.equals("A"));
                 switch (r) {

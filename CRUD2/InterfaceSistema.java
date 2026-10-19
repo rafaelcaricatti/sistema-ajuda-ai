@@ -10,12 +10,14 @@ public class InterfaceSistema {
     private final Scanner scanner;
     private final ControladorUsuario controladorUsuario;
     private final GerenciadorPerguntas gerenciadorPerguntas;
+    private final GerenciadorRespostas gerenciadorRespostas;
     private final DateTimeFormatter formatadorData;
 
     public InterfaceSistema() throws Exception {
         scanner = new Scanner(System.in);
         controladorUsuario = new ControladorUsuario();
         gerenciadorPerguntas = new GerenciadorPerguntas();
+        gerenciadorRespostas = new GerenciadorRespostas();
         formatadorData = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
                 .withZone(ZoneId.systemDefault());
     }
@@ -135,7 +137,7 @@ public class InterfaceSistema {
                     menuMinhaArea(usuario);
                     break;
                 case "B":
-                    new MenuBuscaPerguntas(scanner, gerenciadorPerguntas, controladorUsuario.getArquivoUsuarios()).exibir(usuario);
+                    new MenuBuscaPerguntas(scanner, gerenciadorPerguntas, gerenciadorRespostas, controladorUsuario.getArquivoUsuarios()).exibir(usuario);
                     break;
                 case "S":
                     logado = false;
@@ -154,7 +156,7 @@ public class InterfaceSistema {
             System.out.println("(A) Meus dados");
             System.out.println("(B) Minhas perguntas");
             System.out.println("(C) Minhas respostas");
-            System.out.println("(D) Meus votos");
+            System.out.println("(D) Minhas avaliações");
             System.out.println("(R) Retornar ao menu anterior");
 
             switch (lerOpcao()) {
@@ -165,8 +167,10 @@ public class InterfaceSistema {
                     menuMinhasPerguntas(usuario);
                     break;
                 case "C":
+                    menuInteracoes().minhasRespostas(usuario);
+                    break;
                 case "D":
-                    mensagem("Funcionalidade prevista para uma etapa posterior do projeto.");
+                    menuInteracoes().minhasAvaliacoes(usuario);
                     break;
                 case "R":
                     voltar = true;
@@ -175,6 +179,11 @@ public class InterfaceSistema {
                     mensagem("Opção inválida.");
             }
         }
+    }
+
+    private MenuMinhasInteracoes menuInteracoes() {
+        return new MenuMinhasInteracoes(scanner, gerenciadorPerguntas, gerenciadorRespostas,
+                controladorUsuario.getArquivoUsuarios());
     }
 
     private void menuMeusDados(Usuario usuario) throws Exception {
@@ -317,10 +326,98 @@ public class InterfaceSistema {
     }
 
     private void listarPerguntas(Usuario usuario) throws Exception {
-        cabecalho("MINHAS PERGUNTAS");
-        List<Pergunta> perguntas = gerenciadorPerguntas.listarPerguntasDoUsuario(usuario.idUsuario);
-        imprimirPerguntas(perguntas);
-        pausar();
+        while (true) {
+            cabecalho("Início > Minha área > Minhas perguntas > Listar");
+            List<Pergunta> perguntas = gerenciadorPerguntas.listarPerguntasDoUsuario(usuario.idUsuario);
+            imprimirPerguntas(perguntas);
+
+            if (perguntas.isEmpty()) {
+                pausar();
+                return;
+            }
+
+            String valor = lerTexto("Número da pergunta para ver as respostas (ENTER para voltar): ");
+            if (valor.isEmpty()) {
+                return;
+            }
+            int numero = converterNumero(valor, perguntas.size());
+            if (numero == -1) {
+                mensagem("Número inválido.");
+                continue;
+            }
+            exibirMinhaPergunta(usuario, perguntas.get(numero - 1));
+        }
+    }
+
+    // Tela "Minha área > Minhas perguntas > Pergunta": dados da pergunta + respostas recebidas.
+    // O autor pode abrir uma resposta e arquivá-la (moderação).
+    private void exibirMinhaPergunta(Usuario usuario, Pergunta pergunta) throws Exception {
+        DateTimeFormatter formatadorResposta = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm")
+                .withZone(ZoneId.systemDefault());
+        String caminho = "Início > Minha área > Minhas perguntas > Pergunta";
+
+        while (true) {
+            pergunta = gerenciadorPerguntas.buscarPergunta(pergunta.idPergunta);
+            List<Resposta> respostas = gerenciadorRespostas.listarRespostasDaPergunta(pergunta.idPergunta);
+
+            cabecalho(caminho);
+            System.out.println();
+            System.out.println(formatadorData.format(Instant.ofEpochMilli(pergunta.criacao))
+                    + (pergunta.ativa ? "" : "  (ARQUIVADA)"));
+            System.out.println(pergunta.pergunta);
+            System.out.println("Palavras chave: " + pergunta.palavrasChave);
+            System.out.println();
+            System.out.println("RESPOSTAS");
+            System.out.println("---------");
+
+            if (respostas.isEmpty()) {
+                System.out.println("Nenhuma resposta recebida.");
+            }
+            for (int i = 0; i < respostas.size(); i++) {
+                Resposta r = respostas.get(i);
+                System.out.println("(" + (i + 1) + ") " + r.resposta);
+                System.out.println("Respondido por " + nomeUsuario(r.idUsuario)
+                        + " em " + formatadorResposta.format(Instant.ofEpochMilli(r.criacao)));
+                System.out.println("Nota: " + r.nota + "  (" + r.avaliacoes + " avaliações)");
+                System.out.println();
+            }
+
+            if (pergunta.ativa) {
+                System.out.println("(A) Alterar dados da pergunta");
+                System.out.println("(B) Arquivar pergunta");
+                System.out.println();
+            }
+            System.out.println("(R) Retornar");
+
+            String opcao = lerOpcao();
+            if ("R".equals(opcao)) {
+                return;
+            }
+            if (pergunta.ativa && "A".equals(opcao)) {
+                alterarPerguntaSelecionada(usuario, pergunta);
+                continue;
+            }
+            if (pergunta.ativa && "B".equals(opcao)) {
+                arquivarPerguntaSelecionada(usuario, pergunta);
+                continue;
+            }
+
+            int numero = converterNumero(opcao, respostas.size());
+            if (numero == -1) {
+                mensagem("Opção inválida.");
+                continue;
+            }
+            Resposta selecionada = respostas.get(numero - 1);
+            new MenuResposta(scanner, gerenciadorRespostas).exibir(
+                    usuario, pergunta, usuario.nome,
+                    selecionada, nomeUsuario(selecionada.idUsuario),
+                    caminho, true);
+        }
+    }
+
+    private String nomeUsuario(int idUsuario) throws Exception {
+        Usuario u = controladorUsuario.getArquivoUsuarios().read(idUsuario);
+        return u == null ? "Usuário não encontrado" : u.nome;
     }
 
     private void incluirPergunta(Usuario usuario) throws Exception {
@@ -349,7 +446,10 @@ public class InterfaceSistema {
             return;
         }
 
-        Pergunta selecionada = perguntas.get(numero - 1);
+        alterarPerguntaSelecionada(usuario, perguntas.get(numero - 1));
+    }
+
+    private void alterarPerguntaSelecionada(Usuario usuario, Pergunta selecionada) throws Exception {
         if (!selecionada.ativa) {
             mensagem("Perguntas arquivadas não podem ser alteradas.");
             return;
@@ -388,7 +488,10 @@ public class InterfaceSistema {
             return;
         }
 
-        Pergunta selecionada = perguntas.get(numero - 1);
+        arquivarPerguntaSelecionada(usuario, perguntas.get(numero - 1));
+    }
+
+    private void arquivarPerguntaSelecionada(Usuario usuario, Pergunta selecionada) throws Exception {
         if (!selecionada.ativa) {
             mensagem("Essa pergunta já está arquivada.");
             return;
@@ -426,7 +529,10 @@ public class InterfaceSistema {
     }
 
     private int lerNumeroSequencial(String mensagem, int quantidade) {
-        String valor = lerTexto(mensagem);
+        return converterNumero(lerTexto(mensagem), quantidade);
+    }
+
+    private int converterNumero(String valor, int quantidade) {
         try {
             int numero = Integer.parseInt(valor);
             if (numero >= 1 && numero <= quantidade) {
@@ -481,6 +587,14 @@ public class InterfaceSistema {
             gerenciadorPerguntas.fechar();
         } catch (Exception e) {
             erro = e;
+        }
+
+        try {
+            gerenciadorRespostas.fechar();
+        } catch (Exception e) {
+            if (erro == null) {
+                erro = e;
+            }
         }
 
         try {

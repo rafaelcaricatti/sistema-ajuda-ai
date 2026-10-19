@@ -53,6 +53,32 @@ public class TesteInteracoes {
         GerenciadorRespostas g2 = new GerenciadorRespostas();
         confere(g2.votar(autor, r2, true) == GerenciadorRespostas.ResultadoVoto.JA_VOTOU, "trava de voto duplo persiste após reabrir");
         confere(g2.buscarResposta(r2).nota == -1, "nota persiste após reabrir");
+
+        // área do usuário: minhas respostas / minhas avaliações
+        confere(g2.listarRespostasDoUsuario(ana).isEmpty(), "minhas respostas não mostra a arquivada");
+        confere(g2.listarRespostasDoUsuario(beto).size() == 1, "minhas respostas lista a resposta ativa do usuário");
+        List<Avaliacao> votosAutor = g2.listarAvaliacoesDoUsuario(autor);
+        confere(votosAutor.size() == 1 && votosAutor.get(0).idResposta == r2,
+                "minhas avaliações ignora votos em respostas arquivadas");
+
+        // cancelar avaliação: reverte nota e quantidade e libera novo voto
+        Avaliacao voto = votosAutor.get(0);
+        confere(!g2.cancelarAvaliacao(beto, voto.idAvaliacao), "não cancela avaliação de outro usuário");
+        confere(g2.cancelarAvaliacao(autor, voto.idAvaliacao), "cancela a própria avaliação");
+        lida = g2.buscarResposta(r2);
+        confere(lida.nota == 0 && lida.avaliacoes == 0, "cancelamento reverte nota e avaliações");
+        confere(g2.buscarAvaliacao(voto.idAvaliacao) == null, "registro da avaliação foi excluído");
+        confere(g2.listarAvaliacoesDoUsuario(autor).isEmpty(), "avaliação sai da árvore do usuário");
+        confere(g2.votar(autor, r2, true) == GerenciadorRespostas.ResultadoVoto.OK, "pode votar de novo após cancelar");
+        confere(g2.buscarResposta(r2).nota == 1, "novo voto contabilizado");
+
+        // moderação: autor da pergunta arquiva resposta de outro usuário
+        Pergunta pergunta = new Pergunta(idPergunta, autor, "Pergunta de teste", "teste");
+        Pergunta outraPergunta = new Pergunta(99, beto, "Outra", "teste");
+        confere(!g2.arquivarRespostaDaPergunta(beto, pergunta, r2), "só o autor da pergunta modera");
+        confere(!g2.arquivarRespostaDaPergunta(beto, outraPergunta, r2), "não modera resposta de outra pergunta");
+        confere(g2.arquivarRespostaDaPergunta(autor, pergunta, r2), "autor da pergunta arquiva resposta de outro");
+        confere(g2.listarRespostasDaPergunta(idPergunta).isEmpty(), "resposta moderada some da listagem");
         g2.fechar();
 
         System.out.println("\nTODOS OS TESTES PASSARAM");

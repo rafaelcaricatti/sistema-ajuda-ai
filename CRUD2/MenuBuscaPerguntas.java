@@ -10,14 +10,19 @@ public class MenuBuscaPerguntas {
 
     private final Scanner scanner;
     private final GerenciadorPerguntas gerenciadorPerguntas;
+    private final GerenciadorRespostas gerenciadorRespostas;
     private final ArquivoUsuario arquivoUsuarios;
     private final DateTimeFormatter formatadorData;
 
+    // O GerenciadorRespostas é compartilhado com a Minha área para que os arquivos
+    // de respostas/avaliações fiquem abertos uma única vez.
     public MenuBuscaPerguntas(Scanner scanner,
                               GerenciadorPerguntas gerenciadorPerguntas,
+                              GerenciadorRespostas gerenciadorRespostas,
                               ArquivoUsuario arquivoUsuarios) {
         this.scanner = scanner;
         this.gerenciadorPerguntas = gerenciadorPerguntas;
+        this.gerenciadorRespostas = gerenciadorRespostas;
         this.arquivoUsuarios = arquivoUsuarios;
         this.formatadorData = DateTimeFormatter
                 .ofPattern("dd/MM/yyyy 'às' HH:mm")
@@ -25,34 +30,28 @@ public class MenuBuscaPerguntas {
     }
 
     public void exibir(Usuario usuarioLogado) throws Exception {
-        GerenciadorRespostas gerenciadorRespostas = new GerenciadorRespostas();
+        boolean voltar = false;
 
-        try {
-            boolean voltar = false;
+        while (!voltar) {
+            cabecalho("Início > Buscar perguntas");
+            System.out.println("(A) Perguntas mais recentes");
+            System.out.println("(B) Busca por palavras-chave");
+            System.out.println();
+            System.out.println("(R) Retornar");
 
-            while (!voltar) {
-                cabecalho("Início > Buscar perguntas");
-                System.out.println("(A) Perguntas mais recentes");
-                System.out.println("(B) Busca por palavras-chave");
-                System.out.println();
-                System.out.println("(R) Retornar");
-
-                switch (lerOpcao()) {
-                    case "A":
-                        exibirPerguntasRecentes(usuarioLogado, gerenciadorRespostas);
-                        break;
-                    case "B":
-                        mensagem("Busca por palavras-chave será implementada em uma etapa posterior.");
-                        break;
-                    case "R":
-                        voltar = true;
-                        break;
-                    default:
-                        mensagem("Opção inválida.");
-                }
+            switch (lerOpcao()) {
+                case "A":
+                    exibirPerguntasRecentes(usuarioLogado, gerenciadorRespostas);
+                    break;
+                case "B":
+                    mensagem("Busca por palavras-chave será implementada em uma etapa posterior.");
+                    break;
+                case "R":
+                    voltar = true;
+                    break;
+                default:
+                    mensagem("Opção inválida.");
             }
-        } finally {
-            gerenciadorRespostas.fechar();
         }
     }
 
@@ -247,9 +246,12 @@ public class MenuBuscaPerguntas {
 
                 menuResposta.exibir(
                         usuarioLogado,
+                        pergunta,
+                        nomeAutorPergunta,
                         selecionada,
                         nomeAutorResposta,
-                        "Início > Buscar perguntas > Perguntas mais recentes > Pergunta"
+                        "Início > Buscar perguntas > Perguntas mais recentes > Pergunta",
+                        false
                 );
             } else {
                 mensagem("Opção inválida.");

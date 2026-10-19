@@ -55,7 +55,8 @@ public class ParDataId implements InterfaceArvoreBMais<ParDataId> {
         if (comparacaoData != 0) {
             return comparacaoData;
         }
-        return Integer.compare(this.id, outro.id);
+        // mesma data: o ID maior foi criado depois, então vem primeiro
+        return Integer.compare(outro.id, this.id);
     }
 
     @Override

@@ -66,6 +66,10 @@ public class GerenciadorPerguntas {
         return ativas;
     }
 
+    public Pergunta buscarPergunta(int idPergunta) throws Exception {
+        return arquivoPergunta.read(idPergunta);
+    }
+
     public List<Pergunta> listarPerguntasMaisRecentes() throws Exception {
         return new ArrayList<>(
                 Arrays.asList(arquivoPergunta.readAllByData())
