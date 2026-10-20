@@ -27,6 +27,7 @@ public class GerenciadorPerguntas {
         existente.pergunta = novoTexto;
         existente.palavrasChave = novasPalavrasChave;
         existente.alteracao = System.currentTimeMillis();
+
         return arquivoPergunta.update(existente);
     }
 
@@ -40,9 +41,6 @@ public class GerenciadorPerguntas {
         pergunta.arquivar();
         pergunta.alteracao = System.currentTimeMillis();
 
-        // Não removemos [idUsuario,idPergunta] da árvore B+ ao arquivar:
-        // a pergunta continua pertencendo ao autor e deve continuar aparecendo
-        // na listagem dele, apenas marcada como ARQUIVADA.
         return arquivoPergunta.update(pergunta);
     }
 
@@ -50,18 +48,32 @@ public class GerenciadorPerguntas {
         List<Pergunta> resultado = new ArrayList<>(
                 Arrays.asList(arquivoPergunta.readAllByUsuario(idUsuario))
         );
+
         resultado.sort(Comparator.comparingLong(p -> p.criacao));
+
         return resultado;
     }
 
     public List<Pergunta> listarPerguntasAtivasDoUsuario(int idUsuario) throws Exception {
         List<Pergunta> ativas = new ArrayList<>();
+
         for (Pergunta pergunta : listarPerguntasDoUsuario(idUsuario)) {
             if (pergunta.ativa) {
                 ativas.add(pergunta);
             }
         }
+
         return ativas;
+    }
+
+    public Pergunta buscarPergunta(int idPergunta) throws Exception {
+        return arquivoPergunta.read(idPergunta);
+    }
+
+    public List<Pergunta> listarPerguntasMaisRecentes() throws Exception {
+        return new ArrayList<>(
+                Arrays.asList(arquivoPergunta.readAllByData())
+        );
     }
 
     public void fechar() throws Exception {
