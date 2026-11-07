@@ -9,6 +9,7 @@ public class TesteMotorBusca {
 
     public static void main(String[] args) throws Exception {
         testarCalculoIDF();
+        testarExemploDoEnunciado();
         testarBuscaUmaPalavra();
         testarBuscaVariasPalavras();
         testarOrdenacaoPorTF();
@@ -59,6 +60,26 @@ public class TesteMotorBusca {
         conferir(proximo(MotorBusca.calcularIDF(5, 2), (float) Math.log10(2.5)), "IDF de termo em 2 de 5 perguntas");
         conferir(proximo(MotorBusca.calcularIDF(5, 5), 0.0f), "IDF de termo presente em todas as perguntas");
         conferir(proximo(MotorBusca.calcularIDF(0, 0), 0.0f), "IDF sem perguntas");
+    }
+
+    private static void testarExemploDoEnunciado() throws Exception {
+        IndiceEmMemoria indice = new IndiceEmMemoria();
+        indice.incluir(1, "Introdução à Inteligência Artificial");
+        indice.incluir(2, "Inteligência Emocional para Gestores");
+        indice.incluir(3, "Inteligência no Trabalho por Meio da Inteligência Artificial");
+        indice.incluir(4, "Introdução à Gestão de Equipes");
+
+        conferir(proximo(indice.buscarTermo("inteligencia").get(3), 0.4f), "TF de inteligencia no livro 3");
+        conferir(proximo(MotorBusca.calcularIDF(4, 3), 0.125f, 0.001f), "IDF de inteligencia");
+        conferir(proximo(MotorBusca.calcularIDF(4, 2), 0.301f, 0.001f), "IDF de artificial");
+
+        MotorBusca motor = new MotorBusca(indice);
+        List<ResultadoBusca> resultados = motor.buscar("Inteligência Artificial");
+
+        conferir(Arrays.asList(1, 3, 2).equals(motor.buscarIds("Inteligência Artificial")), "Ranking do enunciado");
+        conferir(proximo(resultados.get(0).getPeso(), 0.142f, 0.001f), "Peso do livro 1");
+        conferir(proximo(resultados.get(1).getPeso(), 0.110f, 0.001f), "Peso do livro 3");
+        conferir(proximo(resultados.get(2).getPeso(), 0.042f, 0.001f), "Peso do livro 2");
     }
 
     private static void testarBuscaUmaPalavra() throws Exception {
@@ -134,7 +155,11 @@ public class TesteMotorBusca {
     }
 
     private static boolean proximo(float valor, float esperado) {
-        return Math.abs(valor - esperado) < TOLERANCIA;
+        return proximo(valor, esperado, TOLERANCIA);
+    }
+
+    private static boolean proximo(Float valor, float esperado, float tolerancia) {
+        return valor != null && Math.abs(valor - esperado) < tolerancia;
     }
 
     private static void conferir(boolean condicao, String teste) {
