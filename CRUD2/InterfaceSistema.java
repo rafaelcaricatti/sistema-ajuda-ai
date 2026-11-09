@@ -137,7 +137,13 @@ public class InterfaceSistema {
                     menuMinhaArea(usuario);
                     break;
                 case "B":
-                    new MenuBuscaPerguntas(scanner, gerenciadorPerguntas, gerenciadorRespostas, controladorUsuario.getArquivoUsuarios()).exibir(usuario);
+                    new MenuBuscaPerguntas(
+                            scanner,
+                            gerenciadorPerguntas,
+                            gerenciadorRespostas,
+                            controladorUsuario.getArquivoUsuarios(),
+                            new MotorBusca(gerenciadorPerguntas.getIndiceInvertido())
+                    ).exibir(usuario);
                     break;
                 case "S":
                     logado = false;

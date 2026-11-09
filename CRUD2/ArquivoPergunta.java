@@ -10,6 +10,7 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
 
     private final ArvoreBMais<ParIdId> relUsuarioPergunta;
     private final ArvoreBMais<ParDataId> indiceDataPergunta;
+    private final IndiceInvertidoPerguntas indiceInvertido;
 
     public ArquivoPergunta() throws Exception {
         super("perguntas", Pergunta.class.getConstructor());
@@ -33,6 +34,20 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
 
         if (indiceDataPergunta.empty()) {
             reconstruirIndiceData();
+        }
+
+        indiceInvertido = new IndiceInvertidoPerguntas("./dados/perguntas");
+        if (indiceInvertido.vazio()) {
+            reconstruirIndiceInvertido();
+        }
+    }
+
+    private void reconstruirIndiceInvertido() throws Exception {
+        for (ParIdId relacao : relUsuarioPergunta.read(null)) {
+            Pergunta pergunta = super.read(relacao.getId2());
+            if (pergunta != null) {
+                indiceInvertido.incluir(pergunta);
+            }
         }
     }
 
@@ -62,6 +77,8 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         if (!criouRelacao || !criouIndiceData) {
             throw new Exception("Não foi possível atualizar os índices da pergunta.");
         }
+
+        indiceInvertido.incluir(pergunta);
 
         return id;
     }
@@ -106,7 +123,12 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
             );
         }
 
-        return super.update(perguntaAtualizada);
+        boolean atualizou = super.update(perguntaAtualizada);
+        if (atualizou) {
+            indiceInvertido.atualizar(perguntaAntiga, perguntaAtualizada);
+        }
+
+        return atualizou;
     }
 
     @Override
@@ -125,7 +147,19 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
                 new ParDataId(pergunta.criacao, id)
         );
 
+        indiceInvertido.remover(pergunta);
+
         return super.delete(id);
+    }
+
+    public IndiceInvertidoPerguntas getIndiceInvertido() {
+        return indiceInvertido;
+    }
+
+    @Override
+    public void close() throws Exception {
+        super.close();
+        indiceInvertido.close();
     }
 
     public Pergunta[] readAllByUsuario(int idUsuario) throws Exception {

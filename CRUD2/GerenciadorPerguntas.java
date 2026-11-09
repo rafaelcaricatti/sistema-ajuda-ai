@@ -76,6 +76,10 @@ public class GerenciadorPerguntas {
         );
     }
 
+    public IndiceInvertidoPerguntas getIndiceInvertido() {
+        return arquivoPergunta.getIndiceInvertido();
+    }
+
     public void fechar() throws Exception {
         arquivoPergunta.close();
     }

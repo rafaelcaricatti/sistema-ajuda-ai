@@ -1,6 +1,7 @@
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -12,6 +13,7 @@ public class MenuBuscaPerguntas {
     private final GerenciadorPerguntas gerenciadorPerguntas;
     private final GerenciadorRespostas gerenciadorRespostas;
     private final ArquivoUsuario arquivoUsuarios;
+    private final MotorBusca motorBusca;
     private final DateTimeFormatter formatadorData;
 
     // O GerenciadorRespostas é compartilhado com a Minha área para que os arquivos
@@ -20,10 +22,19 @@ public class MenuBuscaPerguntas {
                               GerenciadorPerguntas gerenciadorPerguntas,
                               GerenciadorRespostas gerenciadorRespostas,
                               ArquivoUsuario arquivoUsuarios) {
+        this(scanner, gerenciadorPerguntas, gerenciadorRespostas, arquivoUsuarios, null);
+    }
+
+    public MenuBuscaPerguntas(Scanner scanner,
+                              GerenciadorPerguntas gerenciadorPerguntas,
+                              GerenciadorRespostas gerenciadorRespostas,
+                              ArquivoUsuario arquivoUsuarios,
+                              MotorBusca motorBusca) {
         this.scanner = scanner;
         this.gerenciadorPerguntas = gerenciadorPerguntas;
         this.gerenciadorRespostas = gerenciadorRespostas;
         this.arquivoUsuarios = arquivoUsuarios;
+        this.motorBusca = motorBusca;
         this.formatadorData = DateTimeFormatter
                 .ofPattern("dd/MM/yyyy 'às' HH:mm")
                 .withZone(ZoneId.systemDefault());
@@ -44,13 +55,74 @@ public class MenuBuscaPerguntas {
                     exibirPerguntasRecentes(usuarioLogado, gerenciadorRespostas);
                     break;
                 case "B":
-                    mensagem("Busca por palavras-chave será implementada em uma etapa posterior.");
+                    if (motorBusca == null) {
+                        mensagem("Busca por palavras-chave indisponível: índice não configurado.");
+                    } else {
+                        exibirBuscaPorPalavrasChave(usuarioLogado);
+                    }
                     break;
                 case "R":
                     voltar = true;
                     break;
                 default:
                     mensagem("Opção inválida.");
+            }
+        }
+    }
+
+    private void exibirBuscaPorPalavrasChave(Usuario usuarioLogado) throws Exception {
+        String caminhoBusca = "Início > Buscar perguntas > Busca por palavras-chave";
+        cabecalho(caminhoBusca);
+
+        String consulta = lerTextoObrigatorio("Termos de busca: ");
+        List<ResultadoBusca> ranking = motorBusca.buscar(consulta);
+        List<ResultadoBusca> resultadosAtivos = new ArrayList<>();
+        List<Pergunta> perguntasAtivas = new ArrayList<>();
+
+        for (ResultadoBusca resultado : ranking) {
+            Pergunta pergunta = gerenciadorPerguntas.buscarPergunta(resultado.getIdPergunta());
+            if (pergunta != null && pergunta.ativa) {
+                resultadosAtivos.add(resultado);
+                perguntasAtivas.add(pergunta);
+            }
+        }
+
+        if (resultadosAtivos.isEmpty()) {
+            mensagem("Nenhuma pergunta ativa encontrada para esses termos.");
+            return;
+        }
+
+        while (true) {
+            cabecalho(caminhoBusca);
+
+            for (int i = 0; i < resultadosAtivos.size(); i++) {
+                Pergunta pergunta = perguntasAtivas.get(i);
+                Usuario autor = arquivoUsuarios.read(pergunta.idUsuario);
+                String nomeAutor = autor == null ? "Usuário não encontrado" : autor.nome;
+
+                System.out.printf("(%d) %s%n", i + 1, pergunta.pergunta);
+                System.out.printf("    Relevância: %.4f%n", resultadosAtivos.get(i).getPeso());
+                System.out.println("    Criada por " + nomeAutor + " em "
+                        + formatadorData.format(Instant.ofEpochMilli(pergunta.criacao)));
+                System.out.println();
+            }
+
+            System.out.println("(R) Retornar");
+            String opcao = lerOpcao();
+            if ("R".equals(opcao)) {
+                return;
+            }
+
+            int numero = converterNumero(opcao);
+            if (numero >= 1 && numero <= perguntasAtivas.size()) {
+                exibirPergunta(
+                        usuarioLogado,
+                        perguntasAtivas.get(numero - 1),
+                        gerenciadorRespostas,
+                        caminhoBusca + " > Pergunta"
+                );
+            } else {
+                mensagem("Opção inválida.");
             }
         }
     }
@@ -134,7 +206,8 @@ public class MenuBuscaPerguntas {
                 exibirPergunta(
                         usuarioLogado,
                         selecionada,
-                        gerenciadorRespostas
+                        gerenciadorRespostas,
+                        "Início > Buscar perguntas > Perguntas mais recentes > Pergunta"
                 );
             } else {
                 mensagem("Opção inválida.");
@@ -144,7 +217,8 @@ public class MenuBuscaPerguntas {
 
     private void exibirPergunta(Usuario usuarioLogado,
                                 Pergunta pergunta,
-                                GerenciadorRespostas gerenciadorRespostas) throws Exception {
+                                GerenciadorRespostas gerenciadorRespostas,
+                                String caminhoPergunta) throws Exception {
         boolean voltar = false;
 
         while (!voltar) {
@@ -158,9 +232,7 @@ public class MenuBuscaPerguntas {
                             pergunta.idPergunta
                     );
 
-            cabecalho(
-                    "Início > Buscar perguntas > Perguntas mais recentes > Pergunta"
-            );
+            cabecalho(caminhoPergunta);
 
             System.out.println(pergunta.pergunta);
             System.out.println(
@@ -222,7 +294,8 @@ public class MenuBuscaPerguntas {
                         usuarioLogado,
                         pergunta,
                         nomeAutorPergunta,
-                        gerenciadorRespostas
+                        gerenciadorRespostas,
+                        caminhoPergunta + " > Responder"
                 );
                 continue;
             }
@@ -250,7 +323,7 @@ public class MenuBuscaPerguntas {
                         nomeAutorPergunta,
                         selecionada,
                         nomeAutorResposta,
-                        "Início > Buscar perguntas > Perguntas mais recentes > Pergunta",
+                        caminhoPergunta,
                         false
                 );
             } else {
@@ -262,10 +335,9 @@ public class MenuBuscaPerguntas {
     private void responderPergunta(Usuario usuarioLogado,
                                    Pergunta pergunta,
                                    String nomeAutorPergunta,
-                                   GerenciadorRespostas gerenciadorRespostas) throws Exception {
-        cabecalho(
-                "Início > Buscar perguntas > Perguntas mais recentes > Pergunta > Responder"
-        );
+                                   GerenciadorRespostas gerenciadorRespostas,
+                                   String caminhoResposta) throws Exception {
+        cabecalho(caminhoResposta);
 
         System.out.println(pergunta.pergunta);
         System.out.println(
