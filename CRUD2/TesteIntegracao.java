@@ -39,6 +39,11 @@ public class TesteIntegracao {
                 "Segunda pergunta de teste?",
                 "teste;segunda");
 
+        MotorBusca motor = new MotorBusca(gp.getIndiceInvertido());
+        if (!motor.buscarIds("primeira").contains(id1)) {
+            throw new IllegalStateException("A busca não encontrou a palavra-chave inicial.");
+        }
+
         List<Pergunta> perguntas = gp.listarPerguntasDoUsuario(usuario.idUsuario);
         if (perguntas.size() != 2) {
             throw new IllegalStateException("A Árvore B+ não retornou as duas perguntas.");
@@ -50,8 +55,18 @@ public class TesteIntegracao {
             throw new IllegalStateException("Alteração da pergunta falhou.");
         }
 
+        if (motor.buscarIds("primeira").contains(id1)) {
+            throw new IllegalStateException("A palavra-chave antiga permaneceu no índice.");
+        }
+        if (!motor.buscarIds("alterada").contains(id1)) {
+            throw new IllegalStateException("A nova palavra-chave não entrou no índice.");
+        }
+
         if (!gp.arquivarPergunta(usuario.idUsuario, id2)) {
             throw new IllegalStateException("Arquivamento da pergunta falhou.");
+        }
+        if (motor.buscarIds("segunda").contains(id2)) {
+            throw new IllegalStateException("A pergunta arquivada permaneceu nos resultados.");
         }
 
         gp.fechar();
@@ -68,6 +83,11 @@ public class TesteIntegracao {
         long arquivadas = perguntas.stream().filter(p -> !p.ativa).count();
         if (arquivadas != 1) {
             throw new IllegalStateException("Pergunta arquivada não permaneceu visível ao autor.");
+        }
+
+        motor = new MotorBusca(gp.getIndiceInvertido());
+        if (!motor.buscarIds("alterada").contains(id1)) {
+            throw new IllegalStateException("A palavra-chave nova não persistiu após reabrir.");
         }
 
         gp.fechar();
