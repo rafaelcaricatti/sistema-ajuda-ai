@@ -34,13 +34,13 @@ public class TesteIntegracao {
         GerenciadorPerguntas gp = new GerenciadorPerguntas();
         int id1 = gp.incluirPergunta(usuario.idUsuario,
                 "Primeira pergunta de teste?",
-                "teste;primeira");
+                "teste;banco");
         int id2 = gp.incluirPergunta(usuario.idUsuario,
                 "Segunda pergunta de teste?",
-                "teste;segunda");
+                "teste;rede");
 
         MotorBusca motor = new MotorBusca(gp.getIndiceInvertido());
-        if (!motor.buscarIds("primeira").contains(id1)) {
+        if (!motor.buscarIds("banco").contains(id1)) {
             throw new IllegalStateException("A busca não encontrou a palavra-chave inicial.");
         }
 
@@ -55,7 +55,7 @@ public class TesteIntegracao {
             throw new IllegalStateException("Alteração da pergunta falhou.");
         }
 
-        if (motor.buscarIds("primeira").contains(id1)) {
+        if (motor.buscarIds("banco").contains(id1)) {
             throw new IllegalStateException("A palavra-chave antiga permaneceu no índice.");
         }
         if (!motor.buscarIds("alterada").contains(id1)) {
@@ -65,7 +65,7 @@ public class TesteIntegracao {
         if (!gp.arquivarPergunta(usuario.idUsuario, id2)) {
             throw new IllegalStateException("Arquivamento da pergunta falhou.");
         }
-        if (motor.buscarIds("segunda").contains(id2)) {
+        if (motor.buscarIds("rede").contains(id2)) {
             throw new IllegalStateException("A pergunta arquivada permaneceu nos resultados.");
         }
 
