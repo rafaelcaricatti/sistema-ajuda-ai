@@ -1,8 +1,8 @@
 # AJUDA AÍ 1.0
 
-Trabalhos Práticos 1 e 2 da disciplina **Algoritmos e Estruturas de Dados III**.
+Trabalhos Práticos 1, 2 e 3 da disciplina **Algoritmos e Estruturas de Dados III**.
 
-O projeto implementa um sistema de perguntas e respostas em interface textual, com persistência em arquivos. O **TP1** trouxe o CRUD de usuários, o CRUD de perguntas, autenticação, recuperação de senha e o relacionamento 1:N entre usuários e perguntas. O **TP2** acrescenta a busca paginada das perguntas mais recentes, as respostas, as avaliações e o relacionamento N:N entre usuários e perguntas (ver a seção [TP2 – Relacionamento N:N](#tp2--relacionamento-nn)).
+O projeto implementa um sistema de perguntas e respostas em interface textual, com persistência em arquivos. O **TP1** trouxe o CRUD de usuários, o CRUD de perguntas, autenticação, recuperação de senha e o relacionamento 1:N entre usuários e perguntas. O **TP2** acrescentou a busca paginada das perguntas mais recentes, as respostas, as avaliações e o relacionamento N:N entre usuários e perguntas (ver a seção [TP2 – Relacionamento N:N](#tp2--relacionamento-nn)). O **TP3** conclui o sistema com a implementação do **Índice Invertido** sobre as palavras-chave das perguntas e a **busca ranqueada pelo modelo TF-IDF** (ver a seção [TP3 – Índice Invertido e Busca por Palavras-Chave](#tp3--índice-invertido-e-busca-por-palavras-chave)).
 
 ## Participantes
 
@@ -13,13 +13,13 @@ O projeto implementa um sistema de perguntas e respostas em interface textual, c
 
 ## Descrição do sistema
 
-O **AJUDA AÍ 1.0** é uma aplicação Java executada pelo terminal. Nesta etapa do projeto, o sistema permite cadastrar usuários, realizar login, recuperar a senha por meio de uma pergunta secreta, alterar os dados do usuário e gerenciar as perguntas vinculadas à conta autenticada.
+O **AJUDA AÍ 1.0** é uma aplicação Java executada pelo terminal. O sistema permite cadastrar usuários, realizar login, recuperar a senha por meio de uma pergunta secreta, alterar os dados do usuário, gerenciar as perguntas vinculadas à conta autenticada, responder e avaliar respostas de outros usuários, além de realizar buscas por data e por palavras-chave.
 
 Cada pergunta pertence a um único usuário por meio do atributo `idUsuario`. O caminho inverso, isto é, descobrir todas as perguntas pertencentes a determinado usuário, é realizado com uma **Árvore B+** persistente, utilizando o par `[idUsuario, idPergunta]`.
 
 O sistema também utiliza uma **Tabela Hash Extensível** como índice indireto de e-mail dos usuários, permitindo localizar o usuário a partir de seu e-mail sem percorrer sequencialmente o arquivo principal.
 
-No TP1, as opções **Buscar perguntas**, **Minhas respostas** e **Minhas avaliações** apareciam nos menus apenas como parte da estrutura geral da aplicação. Elas foram implementadas no TP2. Somente a **Busca por palavras-chave** continua reservada para uma etapa posterior, conforme o enunciado do TP2.
+No TP1, as opções **Buscar perguntas**, **Minhas respostas** e **Minhas avaliações** apareciam nos menus apenas como parte da estrutura geral da aplicação. As interações e a busca por data foram implementadas no TP2, e a **Busca por palavras-chave** foi implementada no TP3 utilizando listas invertidas e ranqueamento por **TF-IDF**.
 
 ## Funcionalidades implementadas
 
@@ -64,11 +64,11 @@ O arquivamento é definitivo. Em vez de excluir fisicamente a pergunta, o atribu
 | `ControladorUsuario` | Cadastro, login, recuperação de senha e regras de usuário. |
 | `ParEmailIdUsuario` | Par utilizado no índice extensível de e-mail para ID do usuário. |
 | `Seguranca` | Geração de hash SHA-256 e normalização da resposta secreta. |
-| `ArquivoPergunta` | CRUD especializado de perguntas e relacionamento usuário-pergunta. |
+| `ArquivoPergunta` | CRUD especializado de perguntas, relacionamento usuário-pergunta, índice por data e índice invertido. |
 | `GerenciadorPerguntas` | Regras de inclusão, alteração, arquivamento e listagem das perguntas. |
 | `aed3.Arquivo` | CRUD genérico utilizado como base, conforme disponibilizado na disciplina. |
 | `aed3.HashExtensivel` | Tabela Hash Extensível utilizada nos índices. |
-| `aed3.ArvoreBMais` | Árvore B+ disponibilizada pelo professor e utilizada no relacionamento 1:N. |
+| `aed3.ArvoreBMais` | Árvore B+ disponibilizada pelo professor e utilizada nos relacionamentos e datas. |
 | `aed3.ParIdId` | Par de IDs utilizado na Árvore B+ para `[idUsuario, idPergunta]`. |
 | `TestePerguntas` | Testes das operações de perguntas. |
 | `TesteIntegracao` | Teste integrado das principais funcionalidades do sistema. |
@@ -77,11 +77,21 @@ O arquivamento é definitivo. Em vez de excluir fisicamente a pergunta, o atribu
 | `ArquivoResposta` | **(TP2)** CRUD de respostas com as Árvores B+ `[idPergunta, idResposta]` e `[idUsuario, idResposta]`. |
 | `ArquivoAvaliacao` | **(TP2)** CRUD de avaliações com as Árvores B+ `[idUsuario, idAvaliacao]` e `[idResposta, idAvaliacao]`. |
 | `GerenciadorRespostas` | **(TP2)** Regras de negócio: responder, avaliar, arquivar, moderar, cancelar avaliação e listagens. |
-| `MenuBuscaPerguntas` | **(TP2)** Telas de busca: perguntas mais recentes paginadas, pergunta com respostas e responder. |
+| `MenuBuscaPerguntas` | **(TP2 / TP3)** Telas de busca: perguntas mais recentes paginadas, busca por palavras-chave ranqueada por TF-IDF, pergunta com respostas e responder. |
 | `MenuResposta` | **(TP2)** Tela de uma resposta: avaliar, arquivar a própria resposta ou moderar (autor da pergunta). |
 | `MenuMinhasInteracoes` | **(TP2)** Telas "Minhas respostas" e "Minhas avaliações" da área do usuário. |
 | `aed3.ParDataId` | **(TP2)** Par `[data de criação, idPergunta]` da Árvore B+ de datas, ordenado de forma decrescente. |
 | `TesteInteracoes` | **(TP2)** Testes de respostas, avaliações, cancelamento, moderação e persistência. |
+| `aed3.ListaInvertida` | **(TP3)** Estrutura de listas invertidas em arquivo disponibilizada pela disciplina. |
+| `aed3.ElementoLista` | **(TP3)** Elemento armazenado na lista invertida contendo `(idPergunta, frequenciaTF)`. |
+| `ProcessadorPalavrasChave` | **(TP3)** Normalização textual, remoção de *stop words* e cálculo das frequências relativas (TF). |
+| `FonteIndiceInvertido` | **(TP3)** Interface de abstração de consulta ao índice invertido (`buscarTermo` e `totalEntidades`). |
+| `IndiceInvertidoPerguntas` | **(TP3)** Gerenciamento das listas invertidas de palavras-chave apenas para perguntas ativas. |
+| `MotorBusca` | **(TP3)** Cálculo de IDF ($\log_{10}$), acumulação de pesos $\text{TF} \times \text{IDF}$ e ordenação decrescente dos resultados. |
+| `ResultadoBusca` | **(TP3)** Modelo que representa um resultado ranqueado (`idPergunta` e `peso` TF-IDF). |
+| `TesteProcessadorPalavrasChave` | **(TP3)** Testes unitários de normalização, filtragem de *stop words* e cálculo de TF. |
+| `TesteIndiceInvertido` | **(TP3)** Testes de inclusão, atualização, remoção e persistência no índice invertido. |
+| `TesteMotorBusca` | **(TP3)** Testes do cálculo de TF-IDF, ordenação por relevância e atualização dinâmica após edição de palavras-chave. |
 
 ## Operações especiais implementadas
 
@@ -458,6 +468,105 @@ Link: _(adicionar o link do vídeo do TP2 aqui)_
 
 **Sim.** As entidades, os CRUDs, as regras de negócio e as telas foram desenvolvidos pelo grupo. As estruturas genéricas fornecidas pelo professor (`Arquivo`, `HashExtensivel`, `ArvoreBMais`) foram usadas conforme exigido.
 
+## TP3 – Índice Invertido e Busca por Palavras-Chave
+
+### Descrição
+
+No TP3, foi implementada a funcionalidade **Busca por palavras-chave** no menu principal de busca (`MenuBuscaPerguntas`), permitindo localizar perguntas ativas a partir dos termos cadastrados no atributo `palavrasChave` e apresentá-las ordenadas por relevância segundo o modelo **TF-IDF** (*Term Frequency — Inverse Document Frequency*).
+
+A indexação é persistida em disco por meio da classe `aed3.ListaInvertida`, encapsulada por `IndiceInvertidoPerguntas` e integrada automaticamente ao ciclo de vida do CRUD em `ArquivoPergunta`.
+
+### Operações especiais do TP3
+
+#### Normalização de texto, Stop Words e cálculo de TF (`ProcessadorPalavrasChave`)
+
+Tanto os termos cadastrados nas `palavrasChave` de cada pergunta quanto a consulta digitada pelo usuário passam pelo mesmo pipeline em `ProcessadorPalavrasChave`:
+
+1. **Normalização (`normalizar`):** Conversão para letras minúsculas (`Locale.ROOT`), remoção de acentos via `Normalizer.Form.NFD` e substituição de caracteres não alfanuméricos (pontuação, vírgulas, símbolos) por espaços simples.
+2. **Filtragem de *Stop Words* e números (`extrairTermos`):** Descarta tokens vazios, sequências exclusivamente numéricas (`\d+`) e palavras vazias (`STOP_WORDS`), incluindo artigos, preposições, conjunções, numerais por extenso e termos genéricos do domínio do sistema (`"pergunta"`, `"perguntas"`, `"resposta"`, `"respostas"`, `"ajuda"`, `"duvida"`, `"duvidas"`).
+3. **Cálculo da Frequência Relativa (`calcularTF`):** Para os $N$ termos válidos extraídos de uma pergunta, cada ocorrência recebe peso $\frac{1}{N}$. Caso um mesmo termo apareça repetido nas palavras-chave da pergunta, suas frequências são somadas em um `LinkedHashMap<String, Float>`, gerando um único par `(idPergunta, TF)` por termo na lista invertida.
+
+#### Índice Invertido de Perguntas (`IndiceInvertidoPerguntas` e `ArquivoPergunta`)
+
+`IndiceInvertidoPerguntas` gerencia os arquivos `indiceInvertido.dicionario.db` e `indiceInvertido.blocos.db` (com blocos de 10 elementos) e indexa **exclusivamente perguntas ativas** (`pergunta.ativa == true`):
+
+- **Inclusão (`incluir`):** Insere cada par `(termo, ElementoLista(idPergunta, TF))` via `lista.create` (ou `lista.update` caso já exista) e incrementa o total de entidades indexadas com `lista.incrementaEntidades()`.
+- **Remoção e Arquivamento (`remover`):** Remove os pares `(termo, idPergunta)` via `lista.delete` e atualiza o total de entidades com `lista.decrementaEntidades()`. Como no sistema uma pergunta arquivada passa a ter `ativa = false`, ela é automaticamente removida do índice invertido e deixa de influenciar o cálculo de IDF e os resultados de busca.
+- **Atualização (`atualizar`):** Ao editar uma pergunta em `ArquivoPergunta.update`, caso `palavrasChave` ou o estado `ativa` sejam modificados, o índice remove os termos da versão antiga e reinsere os termos da versão atualizada.
+- **Reconstrução automática (`reconstruirIndiceInvertido`):** Na inicialização de `ArquivoPergunta`, se o índice invertido estiver vazio mas houver perguntas cadastradas em `relUsuarioPergunta`, o índice é reconstruído automaticamente.
+
+#### Ranqueamento por TF-IDF (`MotorBusca`)
+
+Ao realizar uma busca em `MotorBusca.buscar(consulta)`:
+
+1. Os termos únicos da consulta são extraídos com `ProcessadorPalavrasChave.extrairTermos` (armazenados em um `LinkedHashSet` para evitar duplicidade de termos na consulta).
+2. Obtém-se o total de perguntas ativas indexadas ($N = \text{indice.totalEntidades()}$).
+3. Para cada termo válido pesquisado que possua ocorrências no índice ($\text{df} > 0$), calcula-se o **IDF** em base 10:
+   $$\text{IDF} = \log_{10}\left(\frac{N}{\text{df}}\right)$$
+4. Para cada pergunta que contém o termo, multiplica-se a frequência armazenada ($\text{TF}$) pelo $\text{IDF}$ do termo e acumula-se a pontuação total da pergunta em um `HashMap<Integer, Float>`.
+5. Os resultados (`ResultadoBusca`) são ordenados em **ordem decrescente de peso** (`Float.compare(b.getPeso(), a.getPeso())`), utilizando o menor `idPergunta` como critério de desempate.
+
+### Capturas de tela do TP3
+
+#### Menu de busca e consulta por múltiplas palavras-chave (TF-IDF)
+
+```text
+AJUDA AÍ 1.0
+------------
+> Início > Buscar perguntas
+
+(A) Perguntas mais recentes
+(B) Busca por palavras-chave
+
+(R) Retornar
+Opção: B
+
+AJUDA AÍ 1.0
+------------
+> Início > Buscar perguntas > Busca por palavras-chave
+
+Termos de busca: sono digestao
+
+AJUDA AÍ 1.0
+------------
+> Início > Buscar perguntas > Busca por palavras-chave
+
+(1) Por que sentimos mais sono depois do almoco?
+    Relevância: 0,5187
+    Criada por Ana Souza em 19/10/2026 às 09:09
+
+(R) Retornar
+```
+
+### Vídeo de demonstração do TP3
+
+Link: _(adicionar o link do vídeo do TP3 aqui)_
+
+### Checklist obrigatório – TP3
+
+#### O índice invertido com palavras-chave foi criado usando a classe ListaInvertida?
+
+**Sim.** A classe `IndiceInvertidoPerguntas` utiliza diretamente `aed3.ListaInvertida` (com registros `aed3.ElementoLista`), persistindo o dicionário em `dados/perguntas/indiceInvertido.dicionario.db` e os blocos em `dados/perguntas/indiceInvertido.blocos.db`, além de manter o contador de entidades sincronizado com `incrementaEntidades()` e `decrementaEntidades()`.
+
+#### É possível buscar perguntas por palavras-chave no menu de buscar perguntas?
+
+**Sim.** No menu `Início > Buscar perguntas`, a opção `(B) Busca por palavras-chave` solicita os termos de busca ao usuário, consulta o `MotorBusca`, exibe as perguntas ativas encontradas com suas respectivas pontuações de relevância e permite selecionar qualquer pergunta para visualizar suas respostas, responder ou avaliar.
+
+#### As perguntas retornadas estão corretamente classificadas pelo modelo TFxIDF?
+
+**Sim.** `ProcessadorPalavrasChave` normaliza os textos, remove *stop words* e calcula a frequência relativa ($\text{TF}$) de cada termo na pergunta. Na consulta, `MotorBusca` calcula $\text{IDF} = \log_{10}(\text{totalPerguntas} / \text{perguntasComTermo})$, multiplica $\text{TF} \times \text{IDF}$, soma os pesos por `idPergunta` quando múltiplos termos coincidem e ordena a lista de resultados em ordem decrescente de relevância. O comportamento é validado pelos testes automatizados em `TesteMotorBusca`.
+
+#### O trabalho compila corretamente?
+
+**Sim.** Todo o projeto compila sem erros ou avisos a partir da pasta `CRUD2` utilizando `javac -encoding UTF-8 aed3/*.java *.java`.
+
+#### O trabalho está completo e funcionando sem erros de execução?
+
+**Sim.** Todas as funcionalidades dos TPs 1, 2 e 3 estão integradas e operando sem erros de execução, incluindo a sincronização automática do índice invertido nas operações de criação, edição de palavras-chave e arquivamento de perguntas, comprovadas pelos testes unitários e de integração.
+
+#### O trabalho é original e não a cópia de um trabalho de outro grupo?
+
+**Sim.** Toda a arquitetura de processamento de palavras-chave, encapsulamento do índice invertido, motor de cálculo TF-IDF, interfaces textuais e suítes de testes foi desenvolvida originalmente pelos integrantes do grupo, utilizando apenas as classes base do pacote `aed3` fornecidas na disciplina.
 
 ## Como compilar e executar
 
@@ -489,6 +598,14 @@ Para executar os testes de respostas e avaliações (TP2):
 
 ```bash
 java TesteInteracoes
+```
+
+Para executar os testes do índice invertido e busca TF-IDF (TP3):
+
+```bash
+java TesteProcessadorPalavrasChave
+java TesteIndiceInvertido
+java TesteMotorBusca
 ```
 
 ## Checklist obrigatório – TP1
@@ -523,4 +640,4 @@ java TesteInteracoes
 
 ## Observações finais
 
-O sistema foi organizado de forma a separar as entidades, o acesso aos arquivos, as regras de negócio e a interface textual. A utilização do CRUD genérico, da Tabela Hash Extensível e da Árvore B+ permite manter os dados persistentes e os relacionamentos necessários para esta etapa do projeto.
+O sistema foi organizado de forma a separar as entidades, o acesso aos arquivos, as regras de negócio e a interface textual. A utilização do CRUD genérico, da Tabela Hash Extensível, da Árvore B+ e da Lista Invertida permite manter os dados persistentes, os relacionamentos íntegros e as buscas ranqueadas por relevância ao longo de todas as etapas do projeto.
