@@ -540,7 +540,7 @@ AJUDA AÍ 1.0
 
 ### Vídeo de demonstração do TP3
 
-Link: _(adicionar o link do vídeo do TP3 aqui)_
+Link: _(https://youtu.be/c9WROkLBd3E)_
 
 ### Checklist obrigatório – TP3
 
